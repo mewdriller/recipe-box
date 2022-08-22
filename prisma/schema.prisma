@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Recipe {
+  id          String @id @default(uuid()) @db.Uuid
+  hash        String @unique
+  ingredients Json
+  nutrition   Json
+  servings    Json
+  slug        String @unique
+  title       String
+
+  @@index([hash])
+  @@index([slug])
+  @@map("recipes")
+}
