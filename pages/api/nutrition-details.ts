@@ -7,6 +7,7 @@ import { prismaClient } from "@/lib/prisma";
 
 const NutritionDetailsRequest = z.object({
   ingredients: z.array(z.string().min(1)).min(1),
+  servings: z.array(z.number().min(1)).min(1).max(2),
   title: z.string().min(1),
 });
 
@@ -14,7 +15,9 @@ type NutritionDetailsRequest = z.infer<typeof NutritionDetailsRequest>;
 
 const nutritionDetailsHandler: NextApiHandler = async (req, res) => {
   try {
-    const { ingredients, title } = NutritionDetailsRequest.parse(req.body);
+    const { ingredients, servings, title } = NutritionDetailsRequest.parse(
+      req.body
+    );
 
     const hash = createHash("sha512")
       .update(ingredients.join("\n"), "utf8")
@@ -28,21 +31,26 @@ const nutritionDetailsHandler: NextApiHandler = async (req, res) => {
       return res.status(200).json(existingRecipe);
     }
 
-    const { data, status } = await getNutritionDetails(ingredients, title);
+    const nutritionDetailsRes = await getNutritionDetails(ingredients);
 
-    if (status === 200) {
-      const recipe = await prismaClient.recipe.create({
-        data: {
-          hash,
-          ingredients,
-          nutrition: data,
-          slug: slugify(title),
-          title,
-        },
-      });
-
-      return res.status(200).json(recipe);
+    if (nutritionDetailsRes.status !== 200) {
+      return res
+        .status(nutritionDetailsRes.status)
+        .json({ message: nutritionDetailsRes.statusText });
     }
+
+    const recipe = await prismaClient.recipe.create({
+      data: {
+        hash,
+        ingredients,
+        nutrition: nutritionDetailsRes.data,
+        servings,
+        slug: slugify(title),
+        title,
+      },
+    });
+
+    return res.status(200).json(recipe);
   } catch (error) {
     console.error(error);
 

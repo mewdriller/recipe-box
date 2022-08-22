@@ -12,6 +12,7 @@ model Recipe {
   hash        String @unique
   ingredients Json
   nutrition   Json
+  servings    Json
   slug        String @unique
   title       String
 

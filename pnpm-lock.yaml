@@ -12,9 +12,9 @@ specifiers:
   '@vanilla-extract/next-plugin': ^2.0.2
   '@vanilla-extract/recipes': ^0.2.5
   clsx: ^1.2.1
-  dotenv-cli: ^6.0.0
   eslint: 8.22.0
   eslint-config-next: 12.2.5
+  nanoid: ^4.0.0
   next: 12.2.5
   prisma: ^4.2.1
   react: 18.2.0
@@ -33,6 +33,7 @@ dependencies:
   '@vanilla-extract/next-plugin': 2.0.2_next@12.2.5
   '@vanilla-extract/recipes': 0.2.5_@vanilla-extract+css@1.7.3
   clsx: 1.2.1
+  nanoid: 4.0.0
   next: 12.2.5_biqbaboplfbrettd7655fr4n2y
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
@@ -44,7 +45,6 @@ devDependencies:
   '@types/node': 18.7.8
   '@types/react': 18.0.17
   '@types/react-dom': 18.0.6
-  dotenv-cli: 6.0.0
   eslint: 8.22.0
   eslint-config-next: 12.2.5_4rv7y5c6xz3vfxwhbrcxxi73bq
   prisma: 4.2.1
@@ -769,26 +769,6 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       esutils: 2.0.3
-    dev: true
-
-  /dotenv-cli/6.0.0:
-    resolution: {integrity: sha512-qXlCOi3UMDhCWFKe0yq5sg3X+pJAz+RQDiFN38AMSbUrnY3uZshSfDJUAge951OS7J9gwLZGfsBlWRSOYz/TRg==}
-    hasBin: true
-    dependencies:
-      cross-spawn: 7.0.3
-      dotenv: 16.0.1
-      dotenv-expand: 8.0.3
-      minimist: 1.2.6
-    dev: true
-
-  /dotenv-expand/8.0.3:
-    resolution: {integrity: sha512-SErOMvge0ZUyWd5B0NXMQlDkN+8r+HhVUsxgOO7IoPDOdDRD2JjExpN6y3KnFR66jsJMwSn1pqIivhU5rcJiNg==}
-    engines: {node: '>=12'}
-    dev: true
-
-  /dotenv/16.0.1:
-    resolution: {integrity: sha512-1K6hR6wtk2FviQ4kEiSjFiH5rpzEVi8WW0x96aztHVMhEspNpc4DVOUTEHtEva5VThQ8IaBX1Pe4gSzpVVUsKQ==}
-    engines: {node: '>=12'}
     dev: true
 
   /electron-to-chromium/1.4.225:
@@ -1628,6 +1608,12 @@ packages:
   /nanoid/3.3.4:
     resolution: {integrity: sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+    dev: false
+
+  /nanoid/4.0.0:
+    resolution: {integrity: sha512-IgBP8piMxe/gf73RTQx7hmnhwz0aaEXYakvqZyE302IXW3HyVNhdNGC+O2MwMAVhLEnvXlvKtGbtJf6wvHihCg==}
+    engines: {node: ^14 || ^16 || >=18}
     hasBin: true
     dev: false
 

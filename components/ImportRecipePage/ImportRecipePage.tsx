@@ -1,13 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Recipe } from "@prisma/client";
 import { NextPage } from "next";
+import { useRouter } from "next/router";
 import { useFieldArray } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import axios from "redaxios";
 import { z } from "zod";
-import { container, field, recipeInput } from "./CreateRecipePage.css";
+import { PageTemplate } from "../PageTemplate";
+import { container, field, recipeInput } from "./ImportRecipePage.css";
 
-const RecipeFields = z.object({
+const FormFields = z.object({
   ingredients: z.array(z.object({ value: z.string().min(1) })).min(1),
   servings: z
     .array(z.object({ value: z.number().min(1) }))
@@ -16,23 +18,24 @@ const RecipeFields = z.object({
   title: z.string().min(1),
 });
 
-type RecipeFields = z.infer<typeof RecipeFields>;
+type FormFields = z.infer<typeof FormFields>;
 
-export const CreateRecipePage: NextPage = () => {
+export const ImportRecipePage: NextPage = () => {
+  const router = useRouter();
   const {
     control,
     formState: { isValid },
     handleSubmit,
     register,
     reset,
-  } = useForm<RecipeFields>({
+  } = useForm<FormFields>({
     defaultValues: {
       ingredients: [],
       servings: [],
       title: "",
     },
     mode: "onChange",
-    resolver: zodResolver(RecipeFields),
+    resolver: zodResolver(FormFields),
   });
   const { fields: ingredients } = useFieldArray({
     control,
@@ -41,7 +44,7 @@ export const CreateRecipePage: NextPage = () => {
   const { fields: servings } = useFieldArray({ control, name: "servings" });
 
   return (
-    <main>
+    <PageTemplate>
       <form
         className={container}
         onSubmit={handleSubmit(async ({ ingredients, servings, title }) => {
@@ -51,7 +54,7 @@ export const CreateRecipePage: NextPage = () => {
             title,
           });
 
-          console.log("data", data);
+          router.push(`/recipes/${data.slug}`);
         })}
       >
         <button
@@ -129,6 +132,6 @@ export const CreateRecipePage: NextPage = () => {
           Analyze recipe
         </button>
       </form>
-    </main>
+    </PageTemplate>
   );
 };
