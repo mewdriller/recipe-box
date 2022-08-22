@@ -32,10 +32,9 @@ export const stack = recipe({
 export const container = style([
   stack({ gap: 2 }),
   {
-    justifyContent: "center",
-    margin: "10ch auto",
+    margin: "0 auto",
     maxWidth: "100ch",
-    minHeight: "100vh",
+    padding: "10ch",
   },
 ]);
 
