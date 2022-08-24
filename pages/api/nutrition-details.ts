@@ -1,8 +1,10 @@
 import slugify from "@sindresorhus/slugify";
 import { createHash } from "crypto";
+import { nanoid } from "nanoid";
 import { NextApiHandler } from "next";
+import axios from "redaxios";
 import { z } from "zod";
-import { getNutritionDetails } from "@/lib/edamam-api";
+import { ENV } from "@/lib/env";
 import { prismaClient } from "@/lib/prisma";
 
 const NutritionDetailsRequest = z.object({
@@ -11,7 +13,7 @@ const NutritionDetailsRequest = z.object({
   title: z.string().min(1),
 });
 
-type NutritionDetailsRequest = z.infer<typeof NutritionDetailsRequest>;
+export type NutritionDetailsRequest = z.infer<typeof NutritionDetailsRequest>;
 
 const nutritionDetailsHandler: NextApiHandler = async (req, res) => {
   try {
@@ -31,7 +33,11 @@ const nutritionDetailsHandler: NextApiHandler = async (req, res) => {
       return res.status(200).json(existingRecipe);
     }
 
-    const nutritionDetailsRes = await getNutritionDetails(ingredients);
+    const nutritionDetailsRes = await axios.post(
+      "https://api.edamam.com/api/nutrition-details",
+      { ingr: ingredients, title: nanoid() },
+      { params: { app_id: ENV.EDAMAM_APP_ID, app_key: ENV.EDAMAM_APP_KEY } }
+    );
 
     if (nutritionDetailsRes.status !== 200) {
       return res

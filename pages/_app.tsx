@@ -1,15 +1,29 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { EmotionCache } from "@emotion/cache";
+import { CacheProvider } from "@emotion/react";
 import { AppProps } from "next/app";
-import { FC, useMemo } from "react";
+import { createEmotionCache } from "@/lib/emotion";
+import Head from "next/head";
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import { theme } from "@/components/theme";
 
-const CustomApp: FC<AppProps> = ({ Component, pageProps }) => {
-  const queryClient = useMemo(() => new QueryClient(), []);
+export type CustomAppProps = AppProps & { emotionCache?: EmotionCache };
 
+const clientSideEmotionCache = createEmotionCache();
+
+export default function CustomApp({
+  Component,
+  emotionCache = clientSideEmotionCache,
+  pageProps,
+}: CustomAppProps) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Component {...pageProps} />
-    </QueryClientProvider>
+    <CacheProvider value={emotionCache}>
+      <Head>
+        <meta name="viewport" content="initial-scale=1, width=device-width" />
+      </Head>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Component {...pageProps} />
+      </ThemeProvider>
+    </CacheProvider>
   );
-};
-
-export default CustomApp;
+}

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import NextLink from "next/link";
 import { FC, PropsWithChildren } from "react";
 
 export const PageTemplate: FC<PropsWithChildren> = ({ children }) => {
@@ -8,10 +8,10 @@ export const PageTemplate: FC<PropsWithChildren> = ({ children }) => {
         <nav>
           <ul>
             <li>
-              <Link href="/">Recipes</Link>
+              <NextLink href="/">Recipes</NextLink>
             </li>
             <li>
-              <Link href="/import">Import recipe</Link>
+              <NextLink href="/import">Import recipe</NextLink>
             </li>
           </ul>
         </nav>

@@ -7,7 +7,7 @@ export default RecipesPage;
 
 export const getServerSideProps: GetServerSideProps<
   ComponentProps<typeof RecipesPage>
-> = async (context) => {
+> = async () => {
   const recipes = await prismaClient.recipe.findMany({
     select: { id: true, slug: true, title: true },
     orderBy: { title: "asc" },

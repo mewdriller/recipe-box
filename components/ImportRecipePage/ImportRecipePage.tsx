@@ -1,13 +1,29 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  AddCircleOutline as AddCircleOutlineIcon,
+  ContentPasteGo as ContentPasteGoIcon,
+  RemoveCircle as RemoveCircleIcon,
+  SaveOutlined as SaveOutlinedIcon,
+} from "@mui/icons-material";
+import {
+  Button,
+  Container,
+  IconButton,
+  Paper,
+  Slider,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { Recipe } from "@prisma/client";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useFieldArray } from "react-hook-form";
+import { Controller, useFieldArray } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import axios from "redaxios";
 import { z } from "zod";
 import { PageTemplate } from "../PageTemplate";
-import { container, field, recipeInput } from "./ImportRecipePage.css";
+import { parseRecipeFromClipboard } from "./parseRecipeFromClipboard";
 
 const FormFields = z.object({
   ingredients: z.array(z.object({ value: z.string().min(1) })).min(1),
@@ -26,112 +42,178 @@ export const ImportRecipePage: NextPage = () => {
     control,
     formState: { isValid },
     handleSubmit,
-    register,
     reset,
   } = useForm<FormFields>({
     defaultValues: {
-      ingredients: [],
-      servings: [],
+      ingredients: [{ value: "" }],
+      servings: [{ value: 1 }, { value: 1 }],
       title: "",
     },
     mode: "onChange",
     resolver: zodResolver(FormFields),
   });
-  const { fields: ingredients } = useFieldArray({
+  const ingredientsFieldArray = useFieldArray({
     control,
     name: "ingredients",
   });
-  const { fields: servings } = useFieldArray({ control, name: "servings" });
 
   return (
     <PageTemplate>
-      <form
-        className={container}
-        onSubmit={handleSubmit(async ({ ingredients, servings, title }) => {
-          const { data } = await axios.post<Recipe>("/api/nutrition-details", {
-            ingredients: ingredients.map(({ value }) => value),
-            servings: servings.map(({ value }) => value),
-            title,
-          });
-
-          router.push(`/recipes/${data.slug}`);
-        })}
-      >
-        <button
-          onClick={async () => {
-            try {
-              const clipboardData = await navigator.clipboard.read();
-              const clipboardItem = clipboardData.find((item) =>
-                item.types.includes("text/html")
+      <Container>
+        <Paper component={Stack} direction="column" gap={2} m={2} p={2}>
+          <Typography component="h1" gutterBottom variant="h4">
+            Import recipe
+          </Typography>
+          <Stack
+            component="form"
+            direction="column"
+            gap={2}
+            onSubmit={handleSubmit(async ({ ingredients, servings, title }) => {
+              const { data } = await axios.post<Recipe>(
+                "/api/nutrition-details",
+                {
+                  ingredients: ingredients.map(({ value }) => value),
+                  servings: Array.from(
+                    new Set(servings.map(({ value }) => value))
+                  ).sort(),
+                  title,
+                }
               );
 
-              if (clipboardItem) {
-                const clipboardBlob = await clipboardItem.getType("text/html");
-                const clipboardText = await clipboardBlob.text();
-
-                const node = document.createElement("div");
-                node.innerHTML = clipboardText.trim();
-
-                const title =
-                  node.querySelector(
-                    'h1[class^="header_recipe-name__"], h1[class*=" header_recipe-name__"]'
-                  )?.textContent ?? "";
-
-                const servings = node
-                  .querySelector(
-                    '[class^="ingredients_recipeYield__"], [class*=" ingredients_recipeYield__"]'
-                  )
-                  ?.textContent?.match(/\d+/g)
-                  ?.map(Number) ?? [1];
-
-                const ingredients = Array.from(
-                  node.querySelectorAll(
-                    'li[class^="ingredient_ingredient__"], li[class*=" ingredient_ingredient__"]'
-                  )
-                ).map((li) =>
-                  Array.from(li.children)
-                    .map((span) => span.textContent)
-                    .filter(Boolean)
-                    .join(" ")
-                );
-
-                reset({
-                  ingredients: ingredients.map((value) => ({ value })),
-                  servings: servings.map((value) => ({ value })),
-                  title,
-                });
-              }
-            } catch (error) {
-              console.error("Failed to import recipe.", error);
-            }
-          }}
-        >
-          Import recipe from clipboard
-        </button>
-        <label className={field}>
-          Title
-          <input {...register("title")} disabled />
-        </label>
-        <label className={field}>
-          Servings
-          {servings.map(({ id }, index) => (
-            <input {...register(`servings.${index}.value`)} disabled key={id} />
-          ))}
-        </label>
-        <label className={field}>
-          Ingredients
-          {ingredients.map(({ id }, index) => (
-            <input
-              {...register(`ingredients.${index}.value`)}
-              disabled
-              key={id}
+              router.push(`/recipes/${data.slug}`);
+            })}
+          >
+            <Controller
+              control={control}
+              name="title"
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  error={Boolean(fieldState.error)}
+                  helperText={fieldState.error?.message}
+                  label="Title"
+                />
+              )}
             />
-          ))}
-        </label>
-        <button disabled={!isValid} type="submit">
-          Analyze recipe
-        </button>
-      </form>
+            <Controller
+              control={control}
+              name="servings"
+              render={({ field }) => {
+                const a11yId = "servings--label";
+
+                return (
+                  <Stack direction="column" gap={1}>
+                    <Typography
+                      component="h2"
+                      gutterBottom
+                      id={a11yId}
+                      variant="h6"
+                    >
+                      Servings
+                    </Typography>
+                    <Slider
+                      {...field}
+                      aria-labelledby={a11yId}
+                      max={10}
+                      min={1}
+                      onChange={(_, nextValue) => {
+                        field.onChange(
+                          Array.isArray(nextValue)
+                            ? nextValue.map((value) => ({ value }))
+                            : [{ value: nextValue }, { value: nextValue }]
+                        );
+                      }}
+                      value={field.value?.map(({ value }) => value)}
+                      valueLabelDisplay="auto"
+                    />
+                  </Stack>
+                );
+              }}
+            />
+            <Stack alignItems="start" direction="column" gap={2}>
+              <Typography component="h2" gutterBottom variant="h6">
+                Ingredients
+              </Typography>
+              {ingredientsFieldArray.fields.map(({ id }, index) => (
+                <Stack
+                  alignSelf="stretch"
+                  component="li"
+                  direction="row"
+                  gap={2}
+                  justifyContent="space-between"
+                  key={id}
+                >
+                  <Controller
+                    control={control}
+                    name={`ingredients.${index}.value`}
+                    render={({ field, fieldState }) => (
+                      <TextField
+                        {...field}
+                        error={Boolean(fieldState.error)}
+                        fullWidth
+                        helperText={fieldState.error?.message}
+                        label={`Ingredient ${index + 1}`}
+                      />
+                    )}
+                  />
+                  {ingredientsFieldArray.fields.length !== 1 && (
+                    <IconButton
+                      aria-label={`remove ingredient ${index + 1}`}
+                      onClick={() => {
+                        ingredientsFieldArray.remove(index);
+                      }}
+                    >
+                      <RemoveCircleIcon />
+                    </IconButton>
+                  )}
+                </Stack>
+              ))}
+              <Button
+                onClick={() => {
+                  ingredientsFieldArray.append({ value: "" });
+                }}
+                startIcon={<AddCircleOutlineIcon />}
+                variant="outlined"
+              >
+                Add ingredient
+              </Button>
+            </Stack>
+            <Stack direction="row" gap={2} justifyContent="end" mt={4}>
+              <Button
+                onClick={async () => {
+                  try {
+                    const { ingredients, servings, title } =
+                      await parseRecipeFromClipboard();
+
+                    reset({
+                      ingredients: ingredients.map((value) => ({ value })),
+                      servings: Array.from({ length: 2 }, (_, index) => ({
+                        value: servings[index] ?? servings[0],
+                      })),
+                      title,
+                    });
+                  } catch (error) {
+                    // TODO: Display error feedback to the user.
+                    console.error("Failed to import recipe.", error);
+                  }
+                }}
+                startIcon={<ContentPasteGoIcon />}
+                variant="outlined"
+              >
+                Import recipe from clipboard
+              </Button>
+              <Button
+                disabled={!isValid}
+                startIcon={<SaveOutlinedIcon />}
+                type="submit"
+                variant="contained"
+              >
+                Save recipe
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      </Container>
     </PageTemplate>
   );
 };
